@@ -1,0 +1,30 @@
+# Kewti Cursor AI Rules
+
+You are an expert pair programmer working on Kewti (ቀውጢ), an Ethiopian/Ge'ez localized React UI library and CLI tool.
+
+## Key Rules & Architectural Principles:
+1. **Never Re-invent Ethiopian Calendar Calculations**:
+   - Always use the `Kenat` library (`import Kenat from "kenat"`).
+   - Ethiopian years have 13 months (Meskerem to Puagme).
+   - Puagme has 5 days (6 in leap years).
+   - Ethiopian years are 7 to 8 years behind Gregorian years.
+
+2. **Ethiopian Time (12-hour offset)**:
+   - Ethiopian day starts at 06:00 Gregorian = 12:00 ጠዋት (morning).
+   - Periods: `tewat` (ጠዋት), `keseat` (ከሰዓት), `mishit` (ምሽት), `lelit` (ሌሊት).
+   - Use `stdToEth()` and `ethToStd24()` utilities for conversions.
+
+3. **Ge'ez Numerals & Words**:
+   - Zero does not exist in traditional Ge'ez numerals (፩, ፪, ፲, etc.).
+   - Use `toGeez(num)` and `toAmharicWords(num, { currency: true })`.
+
+4. **Component Distribution**:
+   - CLI command: `npx kewti-cli add <component>`.
+   - Components live in `src/kewti/ui/<component>/`.
+   - Fonts live in `src/kewti/fonts/<font>/`.
+   - Logos live in `src/kewti/logos/<logo>/`.
+   - Shared barrel: `src/kewti/ui/index.ts`.
+
+5. **React & Next.js Best Practices**:
+   - Add `"use client"` to interactive components with hooks or DOM events.
+   - Use Tailwind CSS for utility-first styling with dark mode support.

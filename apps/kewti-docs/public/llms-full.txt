@@ -1,0 +1,233 @@
+# Kewti Complete LLM Reference (llms-full.txt)
+
+> Comprehensive reference guide for AI coding assistants and developers integrating Kewti components.
+
+---
+
+## 1. Installation & Setup
+
+Kewti follows a shadcn-like distribution model: source code is copied directly into your repository under `src/kewti/`, giving you complete ownership and styling flexibility with Tailwind CSS.
+
+```bash
+# Add components:
+npx kewti-cli add calendar
+npx kewti-cli add time
+npx kewti-cli add input
+npx kewti-cli add numerals
+npx kewti-cli add location-selector
+npx kewti-cli add select
+npx kewti-cli add logo
+npx kewti-cli add fonts
+
+# Add fonts:
+npx kewti-cli font Balderasu
+npx kewti-cli font Bela_Bereka
+npx kewti-cli font Loga_Comic
+npx kewti-cli font Selam
+```
+
+---
+
+## 2. Component Specifications
+
+### 2.1 KewtiCalendar & KewtiDatePicker
+Localized 13-month Ethiopian calendar view with month theme gradients, month artwork animations, national/religious holiday badges, and Gregorian toggle.
+
+**Dependencies:** `kenat`, `framer-motion`, `lucide-react`
+
+**Props:**
+```typescript
+interface CalendarProps {
+  value?: Kenat;
+  onChange?: (date: Kenat) => void;
+  calendarPref?: "ethiopian" | "gregorian"; // default: "ethiopian"
+  showAnimations?: boolean; // default: true
+  showHolidays?: boolean; // default: true
+  className?: string;
+  style?: React.CSSProperties;
+}
+
+interface DatePickerProps extends CalendarProps {
+  placeholder?: string; // default: "ቀን ይምረጡ"
+}
+```
+
+**Usage Example:**
+```tsx
+"use client";
+import { useState } from "react";
+import { KewtiCalendar, KewtiDatePicker } from "@/kewti/ui";
+import Kenat from "kenat";
+
+export function CalendarDemo() {
+  const [date, setDate] = useState<Kenat>(new Kenat());
+  return (
+    <div className="p-4 space-y-4">
+      <KewtiDatePicker
+        value={date}
+        onChange={setDate}
+        calendarPref="ethiopian"
+      />
+      <KewtiCalendar
+        value={date}
+        onChange={setDate}
+        calendarPref="ethiopian"
+      />
+    </div>
+  );
+}
+```
+
+---
+
+### 2.2 KewtiTime
+Picker and converter for Ethiopian 12-hour offset solar time (`tewat`, `keseat`, `mishit`, `lelit`) and Standard time.
+
+**Dependencies:** None
+
+**Props & Types:**
+```typescript
+interface TimeValue {
+  hour: number;   // 0 - 23 (24h standard value)
+  minute: number; // 0 - 59
+}
+
+interface EthiopianTimePickerProps {
+  value: TimeValue;
+  onChange: (value: TimeValue) => void;
+  mode?: "eth" | "std"; // default: "eth"
+  className?: string;
+  selectClassName?: string;
+}
+```
+
+**Conversion Functions:**
+```typescript
+import { stdToEth, ethToStd24 } from "@/kewti/ui";
+
+const { ethHour, period } = stdToEth(14); // 2:00 PM -> { ethHour: 8, period: "keseat" }
+const stdHour = ethToStd24(8, "keseat");  // 14
+```
+
+**Usage Example:**
+```tsx
+"use client";
+import { useState } from "react";
+import { KewtiTime } from "@/kewti/ui";
+
+export function TimeDemo() {
+  const [time, setTime] = useState({ hour: 8, minute: 30 }); // 8:30 AM = 2:30 ጠዋት
+  return (
+    <KewtiTime
+      value={time}
+      onChange={setTime}
+      mode="eth"
+    />
+  );
+}
+```
+
+---
+
+### 2.3 KewtiInput & KewtiSpell
+Phonetic Latin-to-Ge'ez transliteration, Amharic voice dictation (Web Speech API), Kebele ID / TIN format masking, and fuzzy spellchecking.
+
+**Dependencies:** `lucide-react`, `fuse.js`
+
+**Props:**
+```typescript
+interface KewtiInputProps extends React.InputHTMLAttributes<HTMLInputElement | HTMLTextAreaElement> {
+  variant?: "input" | "textarea";
+  value?: string;
+  onValueChange?: (value: string) => void;
+  onSend?: (value: string) => void;
+  defaultLanguage?: "am" | "en"; // default: "am"
+  showVoiceInput?: boolean;
+  spellCheck?: boolean;
+}
+```
+
+**Usage Example:**
+```tsx
+"use client";
+import { useState } from "react";
+import { KewtiInput } from "@/kewti/ui";
+
+export function InputDemo() {
+  const [text, setText] = useState("");
+  return (
+    <KewtiInput
+      value={text}
+      onValueChange={setText}
+      placeholder="Type phonetically: selamu..."
+      defaultLanguage="am"
+      showVoiceInput={true}
+      spellCheck={true}
+    />
+  );
+}
+```
+
+---
+
+### 2.4 KewtiNumerals
+Converts standard Arabic numbers to Ge'ez numerals or spelled-out Amharic words (Birr & Santim).
+
+**Dependencies:** `to-words`
+
+**Functions & Props:**
+```typescript
+import { KewtiNumerals, toGeez, toAmharicWords } from "@/kewti/ui";
+
+toGeez(2024); // "፳፻፳፬"
+toAmharicWords(150.50, { currency: true }); // "አንድ መቶ ሃምሳ ብር ከ ሃምሳ ሳንቲም"
+```
+
+```tsx
+<KewtiNumerals value={120} system="geez" />
+<KewtiNumerals value={120} system="words" currency={true} />
+```
+
+---
+
+### 2.5 KewtiLocationSelector
+Hierarchical dropdown for Ethiopian administrative regions (Region / Admin 1 -> Zone / Subcity / Admin 2 -> Woreda / Admin 3).
+
+**Dependencies:** `lucide-react`
+
+**Usage Example:**
+```tsx
+"use client";
+import { KewtiLocationSelector } from "@/kewti/ui";
+
+export function LocationDemo() {
+  return (
+    <KewtiLocationSelector
+      onLocationChange={(loc) => {
+        console.log(loc.region, loc.zone, loc.woreda);
+      }}
+    />
+  );
+}
+```
+
+---
+
+### 2.6 KewtiLogo
+Vector brand icons for over 70 Ethiopian organizations, banks, tech companies, and universities.
+
+```tsx
+import { KewtiLogo } from "@/kewti/ui";
+
+<KewtiLogo name="commercial_bank_of_ethiopia" className="h-10 w-auto" />
+<KewtiLogo name="ethio_telecom" className="h-8 w-auto" />
+<KewtiLogo name="ethiopian_airlines" className="h-8 w-auto" />
+<KewtiLogo name="chapa" className="h-8 w-auto" />
+```
+
+---
+
+### 2.7 Ethiopic Fonts & Pronunciation
+- **Fonts:** `Balderasu`, `Bela_Bereka`, `Loga_Comic`, `Selam`
+- Configure in Next.js using `next/font/local` pointing to `src/kewti/fonts/<Font>/...`
+- Audio pronunciation: `<KewtiPronounce text="እንኳን ደህና መጡ">Click to Listen</KewtiPronounce>`

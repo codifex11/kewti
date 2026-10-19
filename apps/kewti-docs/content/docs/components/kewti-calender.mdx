@@ -1,6 +1,6 @@
 ---
 title: Kewti Calendar
-description: An Ethiopian & Gregorian calendar component supporting dynamic monthly themes, animations, holiday highlights, date selection, and custom styling.
+description: An Ethiopian & Gregorian calendar and date picker suite supporting dynamic monthly themes, animations, holiday highlights, popover inputs, multi-select dropdowns, and custom styling.
 ---
 
 <CodePlayground
@@ -42,18 +42,43 @@ render(<CalendarExample />);`}
 render(<DatePickerExample />);`}
 />
 
+<CodePlayground
+  defaultCode={`const DropdownPickerExample = () => {
+  const [selectedDate, setSelectedDate] = useState(new Kenat());
+
+  return (
+    <div className="max-w-sm space-y-3">
+      <KewtiDatePickerDropdown
+        value={selectedDate}
+        onChange={(date) => setSelectedDate(date)}
+        calendarPref="ethiopian"
+        showHolidays={true}
+      />
+      <p className="text-xs">
+        Selected: {selectedDate.format({ calendar: "ethiopian" })}
+      </p>
+    </div>
+  );
+};
+render(<DropdownPickerExample />);`}
+/>
+
 ## Installation
 
 ```bash
 npx kewti-cli add calendar
 ```
 
-Kewti-Calender uses [Kenat](https://www.npmjs.com/package/kenat)
+Kewti-Calendar uses [Kenat](https://www.npmjs.com/package/kenat).
 
 ## Usage
 
 ```tsx
-import { KewtiCalendar, KewtiDatePicker } from "@/kewti/ui"
+import { 
+  KewtiCalendar, 
+  KewtiDatePicker, 
+  KewtiDatePickerDropdown 
+} from "@/kewti/ui"
 import Kenat from "kenat"
 ```
 
@@ -81,14 +106,37 @@ const [date, setDate] = useState<Kenat>(new Kenat())
 
 ---
 
+## Dropdown Date Picker
+
+Render compact Day, Month, and Year select dropdowns. This mode automatically clamps invalid days (including Ethiopian leap years for *Pagumē* and Gregorian leap years for February).
+
+```tsx
+const [date, setDate] = useState<Kenat>(new Kenat())
+
+<KewtiDatePickerDropdown
+  value={date}
+  onChange={setDate}
+  calendarPref="ethiopian"
+  showHolidays={true}
+/>
+```
+
+---
+
 ## Gregorian Mode
 
-Switch the preference to Gregorian while maintaining support for the underlying `Kenat` date object.
+Switch the preference to Gregorian across any component while maintaining full compatibility with the underlying `Kenat` date object.
 
 ```tsx
 <KewtiDatePicker
   calendarPref="gregorian"
   placeholder="Select Date"
+/>
+
+<KewtiDatePickerDropdown
+  calendarPref="gregorian"
+  minYear={1980}
+  maxYear={2030}
 />
 ```
 
@@ -121,6 +169,10 @@ Pass custom CSS classes or inline styles using the `className` and `style` props
   className="w-full"
   style={{ opacity: 0.95 }}
 />
+
+<KewtiDatePickerDropdown
+  className="max-w-sm"
+/>
 ```
 
 ---
@@ -130,8 +182,11 @@ Pass custom CSS classes or inline styles using the `className` and `style` props
 - **Dual Calendar Systems:** Seamless support for both **Ethiopian** and **Gregorian** date conversions powered by `kenat`.
 - **Dynamic Month Themes:** Beautiful, smooth gradient backgrounds and seasonal animations per Ethiopian month.
 - **Holiday Indicators & Details:** Built-in holiday identification with an interactive info banner upon date selection.
-- **Standalone or Popover Mode:** Render either as an inline calendar (`KewtiCalendar`) or popover dropdown (`KewtiDatePicker`).
-- **Customizable Styling:** Pass custom `className` and `style` properties to easily adapt to your design system.
+- **Three Picker Modes:**
+  - **Inline Calendar Grid (`KewtiCalendar`):** Full-sized calendar view with month switching.
+  - **Popover Input (`KewtiDatePicker`):** Form-friendly input trigger with an animated calendar popover.
+  - **Select Dropdowns (`KewtiDatePickerDropdown`):** Compact multi-select dropdowns for Day, Month, and Year with automatic leap year clamping.
+- **Customizable Styling:** Pass custom `className` and `style` properties to adapt to your design system.
 - **Full Dark Mode Support:** Tailored styles for both dark and light modes out of the box.
 
 ---
@@ -162,3 +217,18 @@ Pass custom CSS classes or inline styles using the `className` and `style` props
 | `showHolidays` | `boolean` | `true` | Passed to the underlying `KewtiCalendar`. |
 | `className` | `string` | `""` | Additional CSS class names for styling the root container element. |
 | `style` | `React.CSSProperties` | — | Inline styles applied to the root container element. |
+
+### `KewtiDatePickerDropdown` Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `value` | `Kenat` | `today` | Controlled date value instance. |
+| `onChange` | `(date: Kenat) => void` | — | Callback fired when any dropdown (day, month, or year) changes. |
+| `calendarPref` | `"ethiopian" \| "gregorian"` | `"ethiopian"` | Calendar system preference. |
+| `minYear` | `number` | `1900` | Minimum selectable year in the year dropdown. |
+| `maxYear` | `number` | `2050` (ET) / `2100` (GC) | Maximum selectable year in the year dropdown. |
+| `showHolidays` | `boolean` | `true` | Displays a holiday badge below the selects when a holiday is chosen. |
+| `disabled` | `boolean` | `false` | Disables all dropdown controls. |
+| `labels` | `{ day?: string; month?: string; year?: string }` | — | Accessibility `aria-label`s for the dropdown select elements. |
+| `className` | `string` | `""` | Additional CSS class names for styling the container. |
+| `style` | `React.CSSProperties` | — | Inline styles applied to the container. |

@@ -77,6 +77,21 @@ Fonts in `packages/fonts`:
 - `Loga_Comic`
 - `Selam`
 
+### Add AI Skill to your AI Agent
+
+Equip your AI assistant (Antigravity, Cursor, GitHub Copilot, Claude) with complete knowledge of Ethiopian calendars, cyclical time pickers, Ge'ez numerals, and Amharic transliteration:
+
+```bash
+# Add Kewti skill to your project (auto-configures for all agents)
+npx kewti-cli skill
+
+# Or configure specifically for your agent:
+npx kewti-cli skill cursor
+npx kewti-cli skill antigravity
+npx kewti-cli skill copilot
+npx kewti-cli skill claude
+```
+
 ## Contributing
 
 Refer to [CONTRIBUTING.md](./CONTRIBUTING.md) for workflow details, component authoring guidelines, and pull request procedures.

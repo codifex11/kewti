@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import patern from '../../assets/patern.svg';
 import small_logo from '../../assets/small_logo.png';
 import Link from 'next/link';
+import { KewtiGursha } from '@workspace/ui/components/kewti-gursha/component';
 
 export default function Footer() {
   // State for email input and language selector
@@ -84,7 +85,7 @@ export default function Footer() {
           </p>
 
           {/* Buttons */}
-          <div className="flex flex-row items-center gap-6">
+          <div className="flex flex-row flex-wrap items-center gap-4">
             <Link
               href="https://github.com/coderade1905/kewti"
               target='_blank'
@@ -113,24 +114,49 @@ export default function Footer() {
           </div>
 
           {/* Email signup form */}
-          <form onSubmit={handleSubscribe} className="mt-8 flex flex-col sm:flex-row gap-3 max-w-[440px]">
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email for updates"
-              className="flex-1 bg-[#141414] border border-[#0C0C0C]/20 rounded-sm px-4 py-2 text-xs font-mono text-white placeholder-white/40 focus:outline-none focus:border-[#0C0C0C]/40"
-            />
-            <button
-              type="submit"
-              className="bg-[#141414] text-white font-mono text-[11px] font-bold uppercase tracking-wider px-5 py-2 rounded-sm hover:bg-[#1f1f1f] transition-colors"
+          <div>
+            <form
+              action="https://buttondown.com/api/emails/embed-subscribe/kewti"
+              method="post"
+              target="popupwindow"
+              onSubmit={() => {
+                window.open(
+                  "https://buttondown.com/api/emails/embed-subscribe/kewti",
+                  "popupwindow"
+                );
+              }}
+              className="mt-8 flex flex-col sm:flex-row gap-3 max-w-[440px]"
             >
-              Subscribe
-            </button>
-          </form>
-          {subscribeMessage && (
-            <p className="text-[10px] text-[#0C0C0C]/80 mt-2 font-mono">{subscribeMessage}</p>
-          )}
+              <input
+                type="email"
+                name="email"
+                id="bd-email"
+                required
+                placeholder="Email for updates"
+                className="flex-1 bg-[#141414] border border-[#0C0C0C]/20 rounded-sm px-4 py-2 text-xs font-mono text-white placeholder-white/40 focus:outline-none focus:border-[#0C0C0C]/40"
+              />
+              <input type="hidden" value="1" name="embed" />
+              <button
+                type="submit"
+                className="bg-[#141414] text-white font-mono text-[11px] font-bold uppercase tracking-wider px-5 py-2 rounded-sm hover:bg-[#1f1f1f] transition-colors cursor-pointer"
+              >
+                Subscribe
+              </button>
+            </form>
+
+            {/* Optional Buttondown referral link in matching mono style */}
+            <p className="text-[10px] text-[#0C0C0C]/60 mt-2 font-mono">
+              Powered by{" "}
+              <a
+                href="https://buttondown.com/refer/kewti"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-[#0C0C0C]"
+              >
+                Buttondown
+              </a>
+            </p>
+          </div>
 
           {/* Bottom credit line */}
           <div className="mt-8">

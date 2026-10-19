@@ -1,0 +1,24 @@
+# Kewti (ቀውጢ)
+
+> Kewti is a localized React and Next.js UI component library, Ethiopian typography distributor, and CLI tool for Ethiopian web applications.
+
+Kewti provides copy-paste ready components for Ethiopian calendar views, cyclical 12-hour Ethiopian time pickers, phonetic Amharic typing (Latin-to-Ge'ez transliteration), Ge'ez numeral conversions, cascading administrative location selectors, Ge'ez web fonts (Balderasu, Bela Bereka, Loga Comic, Selam), and 70+ vector brand logos.
+
+## Core CLI Usage
+- Add UI Component: `npx kewti-cli add <calendar | time | input | numerals | location-selector | select | spell | logo | fonts>`
+- Add Ethiopic Font: `npx kewti-cli font <Balderasu | Bela_Bereka | Loga_Comic | Selam>`
+- Download Brand Logo: `npx kewti-cli logo <commercial_bank_of_ethiopia | ethio_telecom | chapa | ...>`
+- Install AI Skill: `npx kewti-cli skill` (or `npx kewti-cli skill cursor | antigravity | copilot | claude | codex`)
+- AI Discovery List: `npx kewti-cli list --json`
+- Component Info: `npx kewti-cli info <name> --json`
+
+## Documentation & Full Reference
+- [AI Skills & Agent Integration](/docs/ai-skills): Skill guides and commands for Antigravity, Cursor, Copilot, Claude, and Codex.
+- [Full LLM Documentation](/llms-full.txt): Complete prop definitions, type interfaces, and copy-paste React examples for all components.
+- [Ethiopian Calendar & DatePicker](/docs/components/kewti-calender): 13-month calendar, holiday highlights, month art animations, and Kenat date engine.
+- [Ethiopian Time Picker](/docs/components/kewti-time): 12-hour solar offset picker (ጠዋት, ከሰዓት, ምሽት, ሌሊት) with 24h conversions.
+- [Phonetic Amharic Input](/docs/components/kewti-input): Latin-to-Ge'ez transliteration, voice dictation, Kebele/TIN masks.
+- [Ge'ez Numerals & Words](/docs/components/kewti-numerals): Arabic <-> Ge'ez numeral conversions and spelled-out Birr/Santim words.
+- [Location Selector](/docs/components/kewti-location-selector): Cascading Region, Zone, and Woreda dropdowns.
+- [Ethiopic Fonts](/docs/fonts/installation): Web font loaders for Balderasu, Bela Bereka, Loga Comic, and Selam.
+- [Brand Logos](/docs/logos/installation): Over 70+ official Ethiopian corporate and institutional vector logos.

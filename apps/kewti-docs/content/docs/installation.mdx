@@ -13,7 +13,75 @@ Ensure your project meets the following requirements:
 
 - **React**: `>= 18.0.0`
 - **Node.js**: `>= 20.0.0`
-- **Tailwind CSS**: Installed and configured in your application.
+- **Tailwind CSS**: `>= 3.0.0` — Installed and configured in your application (see below).
+
+---
+
+## 0. Install Tailwind CSS
+
+All Kewti components are styled with Tailwind CSS utility classes, so Tailwind **must** be set up before adding any component.
+
+<Tabs items={["Next.js", "Vite"]}>
+  <Tab value="Next.js">
+
+### Next.js (Tailwind CSS v4)
+
+[Next.js 15+](https://nextjs.org) ships with first-class Tailwind v4 support via the `@tailwindcss/postcss` plugin.
+
+```bash
+npm install tailwindcss @tailwindcss/postcss postcss
+```
+
+Create (or update) `postcss.config.mjs`:
+
+```js
+const config = {
+  plugins: {
+    "@tailwindcss/postcss": {},
+  },
+};
+export default config;
+```
+
+Then import Tailwind in your global CSS file (e.g. `app/globals.css`):
+
+```css
+@import "tailwindcss";
+```
+
+  </Tab>
+  <Tab value="Vite">
+
+### Vite (Tailwind CSS v3)
+
+```bash
+npm install -D tailwindcss postcss autoprefixer
+npx tailwindcss init -p
+```
+
+Update `tailwind.config.js` to include your source files:
+
+```js
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};
+```
+
+Add the Tailwind directives to your `src/index.css`:
+
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+```
+
+  </Tab>
+</Tabs>
 
 ---
 
@@ -119,7 +187,26 @@ import "./globals.css";
 
 ---
 
-## 4. Usage
+## 4. Add AI Skill to your Assistant
+
+You can equip your AI coding assistant (Antigravity, Cursor, GitHub Copilot, Claude) with complete knowledge of Kewti components, Ethiopian calendar rules, and cyclical time logic in one command:
+
+```bash
+# Add skill for all supported AI agents
+npx kewti-cli skill
+
+# Or configure specifically for your editor:
+npx kewti-cli skill cursor
+npx kewti-cli skill antigravity
+npx kewti-cli skill copilot
+npx kewti-cli skill claude
+```
+
+Learn more in the [AI Agent Skills documentation](/docs/ai-skills).
+
+---
+
+## 5. Usage
 
 Import and use the added components inside your project using your import alias:
 

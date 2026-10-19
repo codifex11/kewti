@@ -1,8 +1,16 @@
 "use client"
+
 import { useState, JSX } from "react"
 import Button from "../Button/Button"
 import logo from "../../assets/logo.png"
 import Link from "next/link"
+import { KewtiGursha } from "@workspace/ui/components/kewti-gursha/component"
+
+interface NavLinkItem {
+  label: string
+  href: string
+  external?: boolean
+}
 
 export default function Navbar({
   logotext,
@@ -10,23 +18,26 @@ export default function Navbar({
   logotext?: React.JSX.Element
 }): JSX.Element {
   const [isOpen, setIsOpen] = useState(false)
-  const DOCS_PAGE = process.env.NEXT_PUBLIC_DOCS_PAGE
-  const navLinks = [
-    ["Npm", "https://www.npmjs.com/package/kewti-cli"],
-    ["Github", "https://github.com/coderade1905/kewti"],
-    ["Docs", `${DOCS_PAGE}/docs`],
-    ["Fonts", `/fonts`],
-    ["Logos", `/logos`]
+  const DOCS_PAGE = process.env.NEXT_PUBLIC_DOCS_PAGE || ""
+
+  const navLinks: NavLinkItem[] = [
+    { label: "Npm", href: "https://www.npmjs.com/package/kewti-cli", external: true },
+    { label: "Github", href: "https://github.com/coderade1905/kewti", external: true },
+    { label: "Docs", href: `${DOCS_PAGE}/docs`, external: true },
+    { label: "Fonts", href: "/fonts", external: false },
+    { label: "Logos", href: "/logos", external: false },
   ]
 
   // Handles static imports vs Next.js image object imports safely
   const logoSrc = typeof logo === "string" ? logo : logo.src
 
+  const closeMenu = () => setIsOpen(false)
+
   return (
-    <nav className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+    <nav className="relative mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
       <div className="flex h-20 items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex shrink-0 items-center gap-2">
+        <Link href="/" className="flex shrink-0 items-center gap-2" onClick={closeMenu}>
           <img
             src={logoSrc}
             alt="kewti"
@@ -37,19 +48,37 @@ export default function Navbar({
 
         {/* Desktop Nav Links */}
         <div className="hidden items-center gap-8 md:flex">
-          {navLinks.map((link) => (
-            <a
-              key={link[0]}
-              href={`${link[1]}`}
-              className="text-sm font-medium text-neutral-400 transition-colors hover:text-white"
-            >
-              {link[0]}
-            </a>
-          ))}
+          {navLinks.map((link) =>
+            link.external ? (
+              <a
+                key={link.label}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-medium text-neutral-400 transition-colors hover:text-white"
+              >
+                {link.label}
+              </a>
+            ) : (
+              <Link
+                key={link.label}
+                href={link.href}
+                className="text-sm font-medium text-neutral-400 transition-colors hover:text-white"
+              >
+                {link.label}
+              </Link>
+            )
+          )}
         </div>
 
-        {/* Desktop Action Button */}
-        <div className="hidden md:block">
+        {/* Desktop Action Buttons */}
+        <div className="hidden md:flex md:items-center md:gap-3">
+          <KewtiGursha
+            handle="kewti"
+            text="ቡና ግዙ"
+            variant="gursha"
+            size="sm"
+          />
           <Link
             target="_blank"
             rel="noopener noreferrer"
@@ -62,10 +91,11 @@ export default function Navbar({
         {/* Mobile Hamburger Button */}
         <div className="flex items-center md:hidden">
           <button
-            onClick={() => setIsOpen(!isOpen)}
+            onClick={() => setIsOpen((prev) => !prev)}
             type="button"
             className="rounded-lg p-2 text-neutral-400 transition-colors hover:bg-neutral-800/60 hover:text-white focus:outline-none"
             aria-expanded={isOpen}
+            aria-controls="mobile-menu"
             aria-label="Toggle navigation menu"
           >
             <svg
@@ -97,21 +127,53 @@ export default function Navbar({
 
       {/* Mobile Dropdown Menu */}
       {isOpen && (
-        <div className="space-y-4 rounded-b-xl border-t border-neutral-800/60 bg-neutral-950/90 px-2 py-4 backdrop-blur-md md:hidden">
-          <div className="flex flex-col space-y-2">
-            {navLinks.map((link) => (
-              <a
-                key={link[0]}
-                href={`${link[1]}`}
-                className="text-sm font-medium text-neutral-400 transition-colors hover:text-white"
-              >
-                {link[0]}
-              </a>
-            ))}
+        <div
+          id="mobile-menu"
+          className="absolute left-4 right-4 top-full z-50 mt-1 rounded-2xl border border-neutral-800/80 bg-neutral-950/95 p-4 shadow-2xl backdrop-blur-xl md:hidden"
+        >
+          <div className="flex flex-col space-y-1">
+            {navLinks.map((link) =>
+              link.external ? (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={closeMenu}
+                  className="rounded-lg px-3 py-2.5 text-base font-medium text-neutral-300 transition-colors hover:bg-neutral-800/60 hover:text-white"
+                >
+                  {link.label}
+                </a>
+              ) : (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  onClick={closeMenu}
+                  className="rounded-lg px-3 py-2.5 text-base font-medium text-neutral-300 transition-colors hover:bg-neutral-800/60 hover:text-white"
+                >
+                  {link.label}
+                </Link>
+              )
+            )}
           </div>
 
-          <div className="border-t border-neutral-800/40 px-3 pt-2">
-            <Button className="w-full">Get Started</Button>
+          <div className="mt-4 flex flex-col gap-2.5 border-t border-neutral-800/60 pt-4">
+            <KewtiGursha
+              handle="kewti"
+              text="ቡና ግዙ"
+              variant="gursha"
+              size="md"
+              className="w-full justify-center"
+            />
+            <Link
+              target="_blank"
+              rel="noopener noreferrer"
+              href={`${DOCS_PAGE}/docs`}
+              onClick={closeMenu}
+              className="block w-full"
+            >
+              <Button className="w-full">Get Started</Button>
+            </Link>
           </div>
         </div>
       )}

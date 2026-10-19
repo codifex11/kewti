@@ -6,6 +6,20 @@ import { fileURLToPath } from "url";
 import { execa } from "execa";
 import ora from "ora";
 import pc from "picocolors";
+import {
+  SKILL_MD,
+  REF_CALENDAR,
+  REF_TIME,
+  REF_INPUTS,
+  REF_NUMERALS,
+  REF_FONTS,
+  REF_GURSHA,
+  REF_CLI,
+  CURSOR_RULES,
+  COPILOT_INSTRUCTIONS,
+  AGENTS_MD,
+  CODEX_MD,
+} from "./skill-templates";
 
 const REGISTRY_URL = "https://kewti-registry.vercel.app";
 
@@ -116,22 +130,46 @@ async function installItem(itemName: string, registryItems: any[]) {
     const remotePath = file.path || `fonts/${item.folder}/${file.file}`;
     const fileUrl = `${REGISTRY_URL}/${remotePath}`;
 
+    let contentBuffer: Buffer | null = null;
     try {
-      const response = await fetch(fileUrl);
-      if (!response.ok) throw new Error(`Failed to fetch ${fileUrl}`);
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
+      const response = await fetch(fileUrl, { signal: controller.signal });
+      clearTimeout(timeout);
+      if (response.ok) {
+        const arrayBuffer = await response.arrayBuffer();
+        contentBuffer = Buffer.from(arrayBuffer);
+      }
+    } catch {}
 
-      const arrayBuffer = await response.arrayBuffer();
-      const contentBuffer = Buffer.from(arrayBuffer);
+    // Fallback: Check local monorepo paths if remote fetch failed or offline
+    if (!contentBuffer) {
+      const localCandidates = [
+        path.resolve(process.cwd(), "apps/registry/public", remotePath),
+        path.resolve(process.cwd(), "../../apps/registry/public", remotePath),
+        path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../apps/registry/public", remotePath),
+        path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../packages/ui/src", remotePath.replace(/^components\//, "components/")),
+      ];
+      for (const candidate of localCandidates) {
+        if (await fileExists(candidate)) {
+          try {
+            contentBuffer = await fs.readFile(candidate);
+            break;
+          } catch {}
+        }
+      }
+    }
 
-      let relativeTarget = file.target || `src/kewti/fonts/${item.folder}/${file.file}`;
-      const targetPath = path.resolve(process.cwd(), relativeTarget);
-
-      await fs.mkdir(path.dirname(targetPath), { recursive: true });
-      await fs.writeFile(targetPath, contentBuffer);
-      console.log(pc.green(`  └ Created ${relativeTarget}`));
-    } catch (error) {
+    if (!contentBuffer) {
       exitWithError(`Failed to download ${remotePath}`);
     }
+
+    let relativeTarget = file.target || `src/kewti/fonts/${item.folder}/${file.file}`;
+    const targetPath = path.resolve(process.cwd(), relativeTarget);
+
+    await fs.mkdir(path.dirname(targetPath), { recursive: true });
+    await fs.writeFile(targetPath, contentBuffer);
+    console.log(pc.green(`  └ Created ${relativeTarget}`));
   }
 
   // ONLY update barrel exports if it is an actual UI component
@@ -152,27 +190,74 @@ async function installItem(itemName: string, registryItems: any[]) {
   installedItems.add(itemName);
 }
 
-async function fetchRegistry(endpoint: string) {
-  const spinner = ora(`Fetching registry (${endpoint})...`).start();
+async function fetchRegistry(endpoint: string, silent = false) {
+  const spinner = silent ? null : ora(`Fetching registry (${endpoint})...`).start();
+
+  // 1. Try remote fetch
   try {
-    const response = await fetch(`${REGISTRY_URL}/${endpoint}`);
-    if (!response.ok) throw new Error(`Could not reach ${endpoint}`);
-    const data = await response.json();
-    spinner.succeed(`Registry loaded`);
-    return data.items || data || [];
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 6000);
+    const response = await fetch(`${REGISTRY_URL}/${endpoint}`, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (response.ok) {
+      const data = await response.json();
+      if (spinner) spinner.succeed(`Registry loaded`);
+      return data.items || data || [];
+    }
   } catch (error: any) {
-    spinner.fail(pc.red(`Registry fetch failed.`));
-    exitWithError(`\n❌ ${error.message}\n`);
+    // Network failed or timed out, gracefully check local registry fallback
   }
+
+  // 2. Check local fallback paths
+  const possiblePaths = [
+    path.resolve(process.cwd(), "apps/registry/public", endpoint),
+    path.resolve(process.cwd(), "../apps/registry/public", endpoint),
+    path.resolve(process.cwd(), "../../apps/registry/public", endpoint),
+    path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../apps/registry/public", endpoint),
+  ];
+
+  for (const localPath of possiblePaths) {
+    if (await fileExists(localPath)) {
+      try {
+        const raw = await fs.readFile(localPath, "utf8");
+        const data = JSON.parse(raw);
+        if (spinner) spinner.succeed(`Loaded registry from local cache`);
+        return data.items || data || [];
+      } catch {}
+    }
+  }
+
+  if (spinner) spinner.fail(pc.red(`Registry fetch failed.`));
+  exitWithError(`\n❌ Could not reach ${endpoint} and no local fallback found.\n`);
 }
 
 // Handlers
-async function handleComponentInstall(componentNames: string[]) {
-  console.log(pc.gray(`\nKewti-cli v1.0.0`));
+async function handleComponentInstall(componentNames: string[], options: { dryRun?: boolean } = {}) {
+  console.log(pc.gray(`\nKewti-cli v1.1.0`));
   const components = await fetchRegistry("registry.json");
 
   if (!componentNames || componentNames.length === 0) {
     console.log(`\n💡 Please specify component name(s) to install.\n`);
+    return;
+  }
+
+  if (options.dryRun) {
+    console.log(pc.yellow(`[DRY RUN] Previewing installation:`));
+    for (const name of componentNames) {
+      const cleanName = name.toLowerCase().replace(/^kewti-/, "");
+      const item = components.find(
+        (c: any) => c.name.toLowerCase() === name.toLowerCase() || c.name.toLowerCase() === cleanName
+      );
+      if (!item) {
+        console.log(pc.red(`  ❌ '${name}' not found in registry.`));
+      } else {
+        console.log(pc.cyan(`  ✔ Component: ${item.name}`));
+        console.log(`    Files: ${item.files.map((f: any) => f.target || f.path).join(", ")}`);
+        if (item.dependencies?.length) {
+          console.log(`    Dependencies: ${item.dependencies.join(", ")}`);
+        }
+      }
+    }
     return;
   }
 
@@ -184,7 +269,7 @@ async function handleComponentInstall(componentNames: string[]) {
 }
 
 async function handleFontInstall(fontNames: string[]) {
-  console.log(pc.gray(`\nKewti-cli v1.0.0`));
+  console.log(pc.gray(`\nKewti-cli v1.1.0`));
   const fonts = await fetchRegistry("fonts-registry.json");
 
   if (!fontNames || fontNames.length === 0) {
@@ -203,7 +288,7 @@ async function handleFontInstall(fontNames: string[]) {
 }
 
 async function handleLogoInstall(logoNames: string[]) {
-  console.log(pc.gray(`\nKewti-cli v1.0.0`));
+  console.log(pc.gray(`\nKewti-cli v1.1.0`));
   const logos = await fetchRegistry("logos-registry.json");
 
   if (!logoNames || logoNames.length === 0) {
@@ -219,8 +304,85 @@ async function handleLogoInstall(logoNames: string[]) {
   console.log(`\n🎉 ${pc.bgGreen(pc.black(" SUCCESS "))} Installed logo assets into src/kewti/logos/!\n`);
 }
 
+async function handleSkillInstall(agent = "all", options: { dryRun?: boolean } = {}) {
+  console.log(pc.gray(`\nKewti-cli v1.1.0`));
+  console.log(pc.bold(pc.cyan(`🤖 Adding Kewti Skill to AI Agent (${agent})...\n`)));
+
+  const cwd = process.cwd();
+  const normalized = agent.toLowerCase();
+
+  const filesToWrite: { path: string; content: string; desc: string }[] = [];
+
+  const shouldInstallAntigravity = normalized === "all" || normalized === "antigravity" || normalized === "agy";
+  const shouldInstallCursor = normalized === "all" || normalized === "cursor";
+  const shouldInstallCopilot = normalized === "all" || normalized === "copilot" || normalized === "github";
+  const shouldInstallClaude = normalized === "all" || normalized === "claude" || normalized === "agents";
+  const shouldInstallCodex = normalized === "all" || normalized === "codex" || normalized === "openai";
+
+  if (shouldInstallAntigravity) {
+    filesToWrite.push(
+      { path: ".agents/skills/kewti/SKILL.md", content: SKILL_MD, desc: "Antigravity Kewti Skill" },
+      { path: ".agents/skills/kewti/references/calendar.md", content: REF_CALENDAR, desc: "Calendar Reference" },
+      { path: ".agents/skills/kewti/references/time.md", content: REF_TIME, desc: "Time Reference" },
+      { path: ".agents/skills/kewti/references/inputs-and-spell.md", content: REF_INPUTS, desc: "Inputs Reference" },
+      { path: ".agents/skills/kewti/references/numerals-and-locations.md", content: REF_NUMERALS, desc: "Numerals Reference" },
+      { path: ".agents/skills/kewti/references/fonts-and-logos.md", content: REF_FONTS, desc: "Fonts Reference" },
+      { path: ".agents/skills/kewti/references/gursha.md", content: REF_GURSHA, desc: "Gursha Reference" },
+      { path: ".agents/skills/kewti/references/cli.md", content: REF_CLI, desc: "CLI Reference" }
+    );
+  }
+
+  if (shouldInstallCursor) {
+    filesToWrite.push(
+      { path: ".cursorrules", content: CURSOR_RULES, desc: "Cursor Rules (.cursorrules)" },
+      { path: ".cursor/rules/kewti.mdc", content: CURSOR_RULES, desc: "Cursor Rules Directory (.cursor/rules/kewti.mdc)" }
+    );
+  }
+
+  if (shouldInstallCopilot) {
+    filesToWrite.push(
+      { path: ".github/copilot-instructions.md", content: COPILOT_INSTRUCTIONS, desc: "GitHub Copilot Instructions" }
+    );
+  }
+
+  if (shouldInstallClaude) {
+    filesToWrite.push(
+      { path: "CLAUDE.md", content: AGENTS_MD, desc: "Claude Project Guide (CLAUDE.md)" },
+      { path: "AGENTS.md", content: AGENTS_MD, desc: "Universal Agent Guidelines (AGENTS.md)" }
+    );
+  }
+
+  if (shouldInstallCodex) {
+    filesToWrite.push(
+      { path: "CODEX.md", content: CODEX_MD, desc: "OpenAI Codex / Codex CLI Guidelines (CODEX.md)" }
+    );
+  }
+
+  if (options.dryRun) {
+    console.log(pc.yellow(`[DRY RUN] Would create the following skill files:`));
+    for (const f of filesToWrite) {
+      console.log(`  - ${pc.green(f.path)} (${f.desc})`);
+    }
+    return;
+  }
+
+  for (const f of filesToWrite) {
+    const fullPath = path.resolve(cwd, f.path);
+    await fs.mkdir(path.dirname(fullPath), { recursive: true });
+    await fs.writeFile(fullPath, f.content.trim() + "\n", "utf8");
+    console.log(pc.green(`  ✔ Created ${f.path}`) + pc.gray(` (${f.desc})`));
+  }
+
+  console.log(`\n🎉 ${pc.bgGreen(pc.black(" SUCCESS "))} Kewti skill installed successfully!`);
+  console.log(pc.bold(`\n💡 How to use with your AI Agent:`));
+  console.log(`  • Antigravity / Agentic IDE: Automatically detected and loaded via .agents/skills/kewti/`);
+  console.log(`  • Cursor: Reads .cursorrules & .cursor/rules/kewti.mdc automatically`);
+  console.log(`  • Copilot & Claude: AI will now follow Ethiopian calendar (Kenat), time, and transliteration rules.`);
+  console.log(`  • Codex: Reads CODEX.md for domain rules and component conventions.\n`);
+}
+
 const program = new Command();
-program.name("kewti").description("UI components, fonts and logo assets CLI").version("1.0.0");
+program.name("kewti").description("UI components, fonts and logo assets CLI").version("1.1.0");
 
 async function runHandler(fn: () => Promise<void>) {
   try {
@@ -235,14 +397,21 @@ program
   .command("install [items...]")
   .alias("add")
   .alias("i")
-  .action(async (items: string[]) => {
+  .option("-d, --dry-run", "Preview installation without modifying files or dependencies")
+  .action(async (items: string[], cmdOptions: { dryRun?: boolean }) => {
     await runHandler(async () => {
-      if (!items || items.length === 0) return await handleComponentInstall([]);
+      if (!items || items.length === 0) return await handleComponentInstall([], cmdOptions);
 
       // Option 1: "kewti add logo" installs the UI component KewtiLogo
       const first = items[0].toLowerCase();
       if (first === "logo" && items.length === 1) {
-        return await handleComponentInstall(["logo"]);
+        return await handleComponentInstall(["logo"], cmdOptions);
+      }
+
+      // Skill shortcut: "kewti add skill [agent]"
+      if (first === "skill" || first === "agent") {
+        const agentTarget = items[1] || "all";
+        return await handleSkillInstall(agentTarget, cmdOptions);
       }
 
       // Font shortcut: "kewti add font <name>"
@@ -256,16 +425,264 @@ program
       }
 
       // Fallback: Check if item is in components registry; if not, check logos
-      const components = await fetchRegistry("registry.json");
+      const components = await fetchRegistry("registry.json", false);
       const foundInComponents = components.some(
         (c: any) => c.name.toLowerCase() === items[0].toLowerCase()
       );
 
       if (foundInComponents) {
-        await handleComponentInstall(items);
+        await handleComponentInstall(items, cmdOptions);
       } else {
         await handleLogoInstall(items);
       }
+    });
+  });
+
+// Dedicated skill command: "npx kewti-cli skill"
+program
+  .command("skill [agent]")
+  .alias("agent")
+  .description("Add Kewti AI skill to your project (for Antigravity, Cursor, Copilot, Claude, Codex, or all)")
+  .option("-a, --agent <type>", "Target AI agent: 'antigravity', 'cursor', 'copilot', 'claude', 'codex', or 'all'", "all")
+  .option("-d, --dry-run", "Preview files that would be created without writing")
+  .action(async (agentParam: string | undefined, cmdOptions: { agent?: string; dryRun?: boolean }) => {
+    await runHandler(async () => {
+      const selectedAgent = agentParam || cmdOptions.agent || "all";
+      await handleSkillInstall(selectedAgent, cmdOptions);
+    });
+  });
+
+// List command optimized for AI agents & CLI exploration
+program
+  .command("list")
+  .alias("ls")
+  .description("List available UI components, fonts, and brand logos")
+  .option("-j, --json", "Output results as machine-readable JSON for AI agents")
+  .option("-t, --type <type>", "Filter by 'components', 'fonts', or 'logos'")
+  .action(async (options: { json?: boolean; type?: string }) => {
+    await runHandler(async () => {
+      const isJson = options.json ?? false;
+      const filterType = options.type?.toLowerCase();
+
+      const [components, fonts, logos] = await Promise.all([
+        filterType && filterType !== "components" ? [] : fetchRegistry("registry.json", isJson),
+        filterType && filterType !== "fonts" ? [] : fetchRegistry("fonts-registry.json", isJson),
+        filterType && filterType !== "logos" ? [] : fetchRegistry("logos-registry.json", isJson),
+      ]);
+
+      if (isJson) {
+        console.log(
+          JSON.stringify(
+            {
+              components: components.map((c: any) => ({
+                name: c.name,
+                type: "component",
+                dependencies: c.dependencies || [],
+                registryDependencies: c.registryDependencies || [],
+                files: c.files?.map((f: any) => f.target || f.path) || [],
+              })),
+              fonts: fonts.map((f: any) => ({
+                name: f.name,
+                type: "font",
+                license: f.license || "OFL",
+                files: f.files?.map((file: any) => file.target || file.path) || [],
+              })),
+              skills: [
+                {
+                  name: "skill",
+                  type: "skill",
+                  description: "Kewti AI agent skill bundle and guidelines for Antigravity, Cursor, Copilot, Claude, and Codex.",
+                  command: "npx kewti-cli skill",
+                  files: [
+                    ".agents/skills/kewti/SKILL.md",
+                    ".cursorrules",
+                    ".github/copilot-instructions.md",
+                    "AGENTS.md",
+                    "CODEX.md"
+                  ]
+                }
+              ],
+              logos: logos.map((l: any) => ({
+                name: l.name,
+                title: l.title,
+                type: "logo",
+                files: l.files?.map((f: any) => f.target || f.path) || [],
+              })),
+            },
+            null,
+            2
+          )
+        );
+        return;
+      }
+
+      console.log(pc.bold(pc.cyan(`\nKewti Available Items:`)));
+      console.log(pc.bold(`\n🤖 AI Skills:`));
+      console.log(`  - ${pc.magenta("skill")} ${pc.gray("(install AI skill via: npx kewti-cli skill)")}`);
+      if (components.length > 0) {
+        console.log(pc.bold(`\n📦 UI Components:`));
+        components.forEach((c: any) => {
+          const deps = c.dependencies?.length ? pc.gray(` [deps: ${c.dependencies.join(", ")}]`) : "";
+          console.log(`  - ${pc.green(c.name)}${deps}`);
+        });
+      }
+      if (fonts.length > 0) {
+        console.log(pc.bold(`\n🔤 Fonts:`));
+        fonts.forEach((f: any) => {
+          console.log(`  - ${pc.yellow(f.name)} ${pc.gray(`(${f.license || "OFL"})`)}`);
+        });
+      }
+      if (logos.length > 0) {
+        console.log(pc.bold(`\n🎨 Brand Logos (${logos.length}):`));
+        logos.slice(0, 15).forEach((l: any) => console.log(`  - ${pc.magenta(l.name)}`));
+        if (logos.length > 15) {
+          console.log(pc.gray(`  ... and ${logos.length - 15} more (use --json to view all)`));
+        }
+      }
+      console.log("");
+    });
+  });
+
+// Info command for inspectable component documentation & snippets
+program
+  .command("info <name>")
+  .description("Inspect component/font/logo details and copy-paste usage snippet")
+  .option("-j, --json", "Output details as machine-readable JSON for AI agents")
+  .action(async (name: string, options: { json?: boolean }) => {
+    await runHandler(async () => {
+      const isJson = options.json ?? false;
+      const cleanName = name.toLowerCase().replace(/^kewti-/, "");
+
+      if (cleanName === "skill" || cleanName === "agent") {
+        const skillInfo = {
+          name: "skill",
+          type: "skill",
+          description: "Kewti AI agent skill bundle and guidelines for Antigravity, Cursor, Copilot, and Claude.",
+          dependencies: [],
+          registryDependencies: [],
+          files: [
+            ".agents/skills/kewti/SKILL.md",
+            ".agents/skills/kewti/references/calendar.md",
+            ".agents/skills/kewti/references/time.md",
+            ".agents/skills/kewti/references/inputs-and-spell.md",
+            ".agents/skills/kewti/references/numerals-and-locations.md",
+            ".agents/skills/kewti/references/fonts-and-logos.md",
+            ".agents/skills/kewti/references/cli.md",
+            ".cursorrules",
+            ".cursor/rules/kewti.mdc",
+            ".github/copilot-instructions.md",
+            "AGENTS.md",
+            "CLAUDE.md",
+            "CODEX.md"
+          ],
+          snippet: "# Add Kewti skill to your AI agent:\nnpx kewti-cli skill\n# Or add for a specific agent:\nnpx kewti-cli skill cursor\nnpx kewti-cli skill antigravity\nnpx kewti-cli skill codex",
+        };
+
+        if (isJson) {
+          console.log(JSON.stringify(skillInfo, null, 2));
+          return;
+        }
+
+        console.log(pc.bold(pc.cyan(`\nKewti Item Info: skill`)));
+        console.log(`Type: AI Agent Skill`);
+        console.log(`Description: ${pc.white(skillInfo.description)}`);
+        console.log(`Files created:\n  - ${skillInfo.files.join("\n  - ")}`);
+        console.log(pc.bold(`\nCLI Command:`));
+        console.log(pc.green(`npx kewti-cli skill`));
+        console.log("");
+        return;
+      }
+
+      const [components, fonts, logos] = await Promise.all([
+        fetchRegistry("registry.json", isJson),
+        fetchRegistry("fonts-registry.json", isJson),
+        fetchRegistry("logos-registry.json", isJson),
+      ]);
+
+      const comp = components.find(
+        (c: any) => c.name.toLowerCase() === name.toLowerCase() || c.name.toLowerCase() === cleanName
+      );
+      const font = fonts.find(
+        (f: any) => f.name.toLowerCase() === name.toLowerCase() || f.name.toLowerCase() === cleanName
+      );
+      const logo = logos.find(
+        (l: any) => l.name.toLowerCase() === name.toLowerCase() || l.name.toLowerCase() === cleanName
+      );
+
+      const item = comp || font || logo;
+      if (!item) {
+        exitWithError(`Item '${name}' not found in registry.`);
+      }
+
+      const itemType = comp ? "component" : font ? "font" : "logo";
+
+      const snippetMap: Record<string, string> = {
+        calendar: `import { KewtiCalendar, KewtiDatePicker } from "@/kewti/ui";\n\n<KewtiDatePicker calendarPref="ethiopian" />`,
+        time: `import { KewtiTime } from "@/kewti/ui";\n\n<KewtiTime value={{ hour: 9, minute: 0 }} onChange={console.log} mode="eth" />`,
+        input: `import { KewtiInput } from "@/kewti/ui";\n\n<KewtiInput placeholder="ስምዎን ያስገቡ..." defaultLanguage="am" showVoiceInput={true} />`,
+        numerals: `import { KewtiNumerals, toGeez, toAmharicWords } from "@/kewti/ui";\n\n<KewtiNumerals value={1250} system="geez" />`,
+        "location-selector": `import { KewtiLocationSelector } from "@/kewti/ui";\n\n<KewtiLocationSelector onLocationChange={console.log} />`,
+        select: `import { KewtiSelect } from "@/kewti/ui";\n\n<KewtiSelect placeholder="ይምረጡ..." />`,
+        logo: `import { KewtiLogo } from "@/kewti/ui";\n\n<KewtiLogo name="commercial_bank_of_ethiopia" className="h-8" />`,
+        spell: `import { KewtiSpell } from "@/kewti/ui/kewti-spell/component";\n\n<KewtiSpell><input /></KewtiSpell>`,
+        fonts: `import { KewtiFonts, KewtiPronounce } from "@/kewti/ui";\n\n<KewtiPronounce text="ሰላም">ሰላም</KewtiPronounce>`,
+        gursha: `import { KewtiGursha } from "@/kewti/ui";\n\n<KewtiGursha handle="kewti" text="ቡና ግዙ" variant="gursha" />`,
+      };
+
+      const snippet = snippetMap[item.name.toLowerCase()] || `import { KewtiLogo } from "@/kewti/ui";\n\n<KewtiLogo name="${item.name}" />`;
+
+      const defaultDescriptions: Record<string, string> = {
+        calendar: "Complete Ethiopian calendar & date picker with 13 months, Kenat date arithmetic, holiday badges, and animated month artwork.",
+        time: "Ethiopian 12-hour cyclical time picker (ጠዋት, ከሰዓት, ምሽት, ሌሊት) with standard 24-hour time conversion.",
+        input: "Phonetic Amharic input with real-time Latin-to-Ge'ez transliteration, voice dictation, Kebele/TIN formatting, and fuzzy spellchecking.",
+        numerals: "Ge'ez numeral converter and spelled-out Amharic word translator with Birr and Santim currency support.",
+        "location-selector": "Ethiopian administrative location selector with cascading Region, Zone/Subcity, and Woreda dropdowns.",
+        select: "Searchable dropdown select component with support for remote API data sources and icons.",
+        spell: "Fuzzy dictionary spellchecker for Ge'ez/Amharic words with autocorrection dropdown.",
+        logo: "Vector brand logo component for Ethiopian commercial banks, telecom, government agencies, and tech brands.",
+        fonts: "Ethiopic font preview wrappers and audio pronunciation component using Web Speech API.",
+        gursha: "Ethiopian tipping and 'Buy Me a Coffee' button integrated with Gursha Plus profiles.",
+      };
+
+      const resolvedDescription =
+        item.description ||
+        defaultDescriptions[item.name.toLowerCase()] ||
+        (itemType === "component" ? "Ethiopian localized UI component" : itemType === "logo" ? "Ethiopian brand logo asset" : "Ethiopic typography font");
+
+      if (isJson) {
+        console.log(
+          JSON.stringify(
+            {
+              name: item.name,
+              type: itemType,
+              description: resolvedDescription,
+              dependencies: item.dependencies || [],
+              registryDependencies: item.registryDependencies || [],
+              files: item.files?.map((f: any) => f.target || f.path) || [],
+              snippet,
+            },
+            null,
+            2
+          )
+        );
+        return;
+      }
+
+      console.log(pc.bold(pc.cyan(`\nKewti Item Info: ${item.name}`)));
+      console.log(`Type: ${itemType}`);
+      if (item.description) {
+        console.log(`Description: ${pc.white(item.description)}`);
+      }
+      if (item.dependencies?.length) {
+        console.log(`NPM Dependencies: ${pc.yellow(item.dependencies.join(", "))}`);
+      }
+      if (item.registryDependencies?.length) {
+        console.log(`Registry Dependencies: ${pc.yellow(item.registryDependencies.join(", "))}`);
+      }
+      console.log(`Files created:\n  - ${item.files.map((f: any) => f.target || f.path).join("\n  - ")}`);
+      console.log(pc.bold(`\nUsage Snippet:`));
+      console.log(pc.green(snippet));
+      console.log("");
     });
   });
 

@@ -62,7 +62,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={cn("antialiased", roboto.className, jetbrainsMono.variable)}
+      className={cn("antialiased dark", roboto.className, jetbrainsMono.variable)}
     >
       <body>{children}</body>
     </html>

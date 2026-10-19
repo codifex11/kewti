@@ -2,7 +2,7 @@ import React from 'react'
 import Navbar from '../Navbar/Navbar'
 import HeroBackground from './HeroBackground'
 import HeroSection from './HeroSection'
-import Calnder from './Calnder'
+import Calendar from './Calendar'
 import InstallationCard from '../NpmCopy/InstallationCard'
 import pointDown from '../../assets/pointDown.svg'
 import StatsBanner from '../Banner/StatsBanner'
@@ -34,8 +34,8 @@ async function getWeeklyDownloads(packageName) {
 
 export default async function Hero() {
   const downloads = await getWeeklyDownloads("kewti-cli");
-  const formattedDownloads = downloads 
-    ? downloads.toLocaleString() 
+  const formattedDownloads = downloads
+    ? downloads.toLocaleString()
     : "N/A";
 
   return (
@@ -44,7 +44,7 @@ export default async function Hero() {
         <Navbar />
         <HeroSection />
         <div className='w-4/5 flex items-center justify-center py-20'>
-          <Calnder />
+          <Calendar />
         </div>
         <InstallationCard arrowImage={pointDown.src} className="mb-20" />
       </HeroBackground>
@@ -55,10 +55,10 @@ export default async function Hero() {
         {/* <div className='w-4/5 flex items-center justify-center py-20'>
           <Futures />
         </div> */}
-        <InstallationCard 
-          arrowImage={pointDown.src} 
-          className="mb-20" 
-          text={`Weekly Downloads: ${formattedDownloads}`} 
+        <InstallationCard
+          arrowImage={pointDown.src}
+          className="mb-20"
+          text={`Weekly Downloads: ${formattedDownloads}`}
         />
       </HeroBackground>
 

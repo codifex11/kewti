@@ -1,0 +1,94 @@
+---
+title: Kewti Gursha
+description: A clean, customizable creator tipping button connecting supporters to Gursha Plus profiles.
+---
+
+import KewtiGurshaCustomizer from "@/components/KewtiGurshaCustomizer"
+import { KewtiGursha } from '@workspace/ui/components/kewti-gursha/component';
+
+## Live Customizer
+
+Use the interactive generator below to customize colors, labels, size, and icons, then copy the generated React code:
+
+<KewtiGurshaCustomizer />
+
+---
+
+## Installation
+
+```bash
+npx kewti-cli add gursha
+```
+
+## Usage
+
+```tsx
+import { KewtiGursha } from "@/kewti/ui"
+```
+
+### Basic
+
+Provide your Gursha handle to link directly to your profile:
+
+```tsx
+<KewtiGursha handle="kewti" />
+```
+
+---
+
+### Custom Colors
+
+Customize the background color, text color, and radius:
+
+```tsx
+<KewtiGursha
+  handle="kewti"
+  text="ቡና ግዙ"
+  bgColor="#f59e0b"
+  textColor="#0a0a0a"
+  radius="full"
+/>
+```
+
+---
+
+### Built-in Variants
+
+```tsx
+{/* 1. Gursha Gold (Default) */}
+<KewtiGursha handle="kewti" variant="gursha" />
+
+{/* 2. Buna Coffee Roast */}
+<KewtiGursha handle="kewti" variant="coffee" text="Buy me a Buna" />
+
+{/* 3. Dark Neutral */}
+<KewtiGursha handle="kewti" variant="default" />
+
+{/* 4. Outline */}
+<KewtiGursha handle="kewti" variant="outline" />
+
+{/* 5. Ghost */}
+<KewtiGursha handle="kewti" variant="ghost" />
+```
+
+---
+
+## Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `handle` | `string` | **Required** | Your Gursha Plus handle. Automatically strips leading `@` and formats to `https://www.gurshaplus.com/[handle]`. |
+| `username` | `string` | — | Backward-compatible alias for `handle`. |
+| `href` | `string` | — | Direct link override. |
+| `text` | `string` | `"Buy me a Coffee"` / `"ጉርሻ ስጠኝ"` | Button label. |
+| `lang` | `"en" \| "am"` | `"en"` | Language preset if no custom label is provided. |
+| `bgColor` | `string` | — | Custom CSS/Hex background color. |
+| `textColor` | `string` | — | Custom text and icon color. |
+| `variant` | `"gursha" \| "default" \| "outline" \| "ghost" \| "coffee"` | `"gursha"` | Built-in color preset (used when `bgColor` is omitted). |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | Button height and icon scale. |
+| `radius` | `"full" \| "xl" \| "lg" \| "md"` | `"full"` | Corner radius shape. |
+| `icon` | `React.ReactNode` | `<SiniIcon />` | Custom icon element. |
+| `showIcon` | `boolean` | `true` | Toggles icon rendering. |
+| `showExternalIcon` | `boolean` | `false` | Displays external link arrow. |
+| `target` | `string` | `"_blank"` | Anchor `target` attribute. |
+| `rel` | `string` | `"noopener noreferrer"` | Anchor `rel` attribute. |

@@ -1,3 +1,5 @@
+"use client"
+
 import React, { useState, useEffect, useRef, useMemo } from "react"
 import {
   Calendar as CalendarIcon,
@@ -91,6 +93,8 @@ interface CalendarProps {
   calendarPref?: "ethiopian" | "gregorian"
   showAnimations?: boolean
   showHolidays?: boolean
+  /** When true, renders a day <select> dropdown in the header for quick day navigation */
+  showDropdownDate?: boolean
   className?: string
   style?: React.CSSProperties
 }
@@ -102,6 +106,8 @@ interface DatePickerProps {
   placeholder?: string
   showAnimations?: boolean
   showHolidays?: boolean
+  /** When true, renders a day <select> dropdown in the calendar header */
+  showDropdownDate?: boolean
   className?: string
   style?: React.CSSProperties
 }
@@ -146,6 +152,7 @@ export function KewtiCalendar({
   calendarPref = "ethiopian",
   showAnimations = true,
   showHolidays = true,
+  showDropdownDate = false,
   className = "",
   style,
 }: CalendarProps) {
@@ -403,6 +410,40 @@ export function KewtiCalendar({
 
   const ET_YEAR_RANGE = Array.from({ length: 151 }, (_, i) => 1900 + i)
 
+  // Compute how many days are in the currently viewed month for the day dropdown
+  const daysInViewMonth = useMemo(() => {
+    if (isGreg) {
+      return new Date(viewYear, viewMonth, 0).getDate()
+    }
+    // Ethiopian months: 12 months of 30 days; month 13 (Pagume) has 5 or 6
+    if (viewMonth === 13) {
+      // Pagume is 6 days in an Ethiopian leap year (year % 4 === 3)
+      return viewYear % 4 === 3 ? 6 : 5
+    }
+    return 30
+  }, [isGreg, viewMonth, viewYear])
+
+  const handleDayDropdownChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const day = Number(e.target.value)
+    let instance: Kenat
+    if (isGreg) {
+      instance = new Kenat(new Date(viewYear, viewMonth - 1, day))
+    } else {
+      instance = new Kenat({ year: viewYear, month: viewMonth, day })
+    }
+    setViewDay(day)
+    onChange?.(instance)
+    const holiday =
+      holiDays[`${viewYear}${pad2(viewMonth)}${pad2(day)}`]
+    if (holiday) {
+      SetselectedHoliday(holiday)
+      setInfoOpen(true)
+    } else {
+      SetselectedHoliday(null)
+      setInfoOpen(false)
+    }
+  }
+
   return (
     <div
       style={style}
@@ -489,6 +530,28 @@ export function KewtiCalendar({
               )
             )}
           </select>
+
+          {/* Day dropdown — only rendered when showDropdownDate is true */}
+          {showDropdownDate && (
+            <select
+              value={viewDay}
+              onChange={handleDayDropdownChange}
+              className="cursor-pointer appearance-none rounded border-0 bg-transparent px-1 py-0.5 text-center text-sm leading-none font-medium text-neutral-900 outline-none hover:bg-neutral-100 dark:text-neutral-50 dark:hover:bg-neutral-900"
+            >
+              {Array.from({ length: daysInViewMonth }, (_, i) => i + 1).map(
+                (day) => (
+                  <option
+                    className="bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-50"
+                    key={day}
+                    value={day}
+                  >
+                    {day}
+                  </option>
+                )
+              )}
+            </select>
+          )}
+
           <select
             value={viewYear}
             onChange={(e) => {
@@ -653,6 +716,7 @@ export function KewtiDatePicker({
   placeholder = "ቀን ይምረጡ",
   showAnimations = true,
   showHolidays = true,
+  showDropdownDate = false,
   className = "",
   style,
 }: DatePickerProps) {
@@ -719,6 +783,7 @@ export function KewtiDatePicker({
             calendarPref={calendarPref}
             showAnimations={showAnimations}
             showHolidays={showHolidays}
+            showDropdownDate={showDropdownDate}
             onChange={(date) => {
               onChange?.(date)
             }}

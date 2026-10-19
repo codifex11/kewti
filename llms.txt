@@ -1,0 +1,21 @@
+# Kewti (ቀውጢ)
+
+> Kewti is a localized React and Next.js UI component library, Ethiopian typography distributor, and CLI tool for Ethiopian web applications.
+
+Kewti provides copy-paste ready components for Ethiopian calendar views, cyclical 12-hour Ethiopian time pickers, phonetic Amharic typing (Latin-to-Ge'ez transliteration), Ge'ez numeral conversions, cascading administrative location selectors, Ge'ez web fonts (Balderasu, Bela Bereka, Loga Comic, Selam), and 70+ vector brand logos.
+
+## Core CLI Usage
+- Add UI Component: `npx kewti-cli add <calendar | time | input | numerals | location-selector | select | spell | logo | fonts>`
+- Add Ethiopic Font: `npx kewti-cli font <Balderasu | Bela_Bereka | Loga_Comic | Selam>`
+- Download Brand Logo: `npx kewti-cli logo <commercial_bank_of_ethiopia | ethio_telecom | chapa | ...>`
+- Install AI Skill: `npx kewti-cli skill` (or `npx kewti-cli skill cursor | antigravity | copilot | claude | codex`)
+- AI Discovery List: `npx kewti-cli list --json`
+- Component Info: `npx kewti-cli info <name> --json`
+
+## AI Customizations & Skills
+- Antigravity Skill: `.agents/skills/kewti/SKILL.md`
+- Cursor Rules: `.cursorrules` and `.cursor/rules/kewti.mdc`
+- GitHub Copilot Instructions: `.github/copilot-instructions.md`
+- Claude & Agent Guidelines: `CLAUDE.md` / `AGENTS.md`
+- OpenAI Codex Guidelines: `CODEX.md`
+- Comprehensive Documentation: `llms-full.txt`

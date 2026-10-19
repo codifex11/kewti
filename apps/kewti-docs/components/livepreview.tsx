@@ -3,18 +3,20 @@ import { LiveProvider, LiveEditor, LiveError, LivePreview } from 'react-live';
 import React from 'react';
 import { KewtiInput } from '@workspace/ui/components/kewti-inputs/component';
 import { KewtiLocationSelector } from '@workspace/ui/components/kewti-location-selector/component';
-import { KewtiCalendar, KewtiDatePicker } from '@workspace/ui/components/kewti-calender/component';
+import { KewtiCalendar, KewtiDatePicker, KewtiDatePickerDropdown } from '@workspace/ui/components/kewti-calender/component';
 import { KewtiFonts, KewtiPronounce } from '@workspace/ui/components/kewti-fonts/component';
 import { KewtiTime } from '@workspace/ui/components/kewti-time/component';
 import { KewtiNumerals } from '@workspace/ui/components/kewti-numerals/component';
 import KewtiSpell from '@workspace/ui/components/kewti-spell/component';
 import { KewtiSelect } from '@workspace/ui/components/kewti-select/component';
+import { KewtiGursha } from '@workspace/ui/components/kewti-gursha/component';
+import KewtiGurshaCustomizer from './KewtiGurshaCustomizer';
 import { Landmark } from 'lucide-react';
 import { University } from 'lucide-react';
 import Kenat from 'kenat';
-import {KewtiLogo} from "@workspace/ui/components/kewti-logos/component"
+import { KewtiLogo } from "@workspace/ui/components/kewti-logos/component"
 
-const scope = { React, KewtiInput, Landmark, University, KewtiNumerals,  KewtiSpell, KewtiLocationSelector, KewtiCalendar, KewtiDatePicker, KewtiTime, KewtiPronounce, KewtiFonts, KewtiSelect, KewtiLogo, Kenat, useState: React.useState };
+const scope = { React, KewtiInput, Landmark, University, KewtiNumerals, KewtiGurshaCustomizer, KewtiSpell, KewtiLocationSelector, KewtiCalendar, KewtiDatePickerDropdown, KewtiDatePicker, KewtiTime, KewtiPronounce, KewtiFonts, KewtiSelect, KewtiLogo, Kenat, KewtiGursha, useState: React.useState };
 
 export function CodePlayground({ defaultCode }: { defaultCode: string }) {
   return (

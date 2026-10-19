@@ -17,6 +17,27 @@ npx kewti-cli add calendar
 # Add Input with Amharic Transliteration
 npx kewti-cli add input
 
+# Add Kewti AI Skill to your agent (Antigravity, Cursor, Copilot, Claude)
+npx kewti-cli skill
+
+# Add Kewti AI Skill specifically for your preferred editor
+npx kewti-cli skill cursor
+npx kewti-cli skill antigravity
+npx kewti-cli skill copilot
+npx kewti-cli skill claude
+
+# Preview installation without modifying files (--dry-run)
+npx kewti-cli add calendar --dry-run
+npx kewti-cli skill --dry-run
+
+# Inspect component details and copy-paste React snippet
+npx kewti-cli info calendar
+npx kewti-cli info skill
+
+# Machine-readable output for AI agents & scripts (--json)
+npx kewti-cli list --json
+npx kewti-cli info calendar --json
+npx kewti-cli info skill --json
 ```
 
 ---
