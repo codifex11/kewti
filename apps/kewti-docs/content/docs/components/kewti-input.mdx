@@ -136,13 +136,14 @@ Type a consonant key followed by a vowel to change the **Fidel order**:
 
 | Fidel Order | Modifying Key | Example (`b` + Key) | Output |
 | :--- | :--- | :--- | :--- |
-| **1st Order (G'eez)** | *(Default / Consonant only)* | `b` | **በ** |
-| **2nd Order (Ka'ib)** | `u` | `b` + `u` | **ቡ** |
+| **1st Order (G'eez)** | `e` | `b` + `e` | **በ** |
+| **2nd Order (Ka'ib)** | `u` / `oo` | `b` + `u` | **ቡ** |
 | **3rd Order (Salis)** | `i` | `b` + `i` | **ቢ** |
-| **4th Order (Rabi)** | `a` | `b` + `a` | **ባ** |
-| **5th Order (Hamis)** | `ie` | `b` + `i` + `e` | **ቤ** |
-| **6th Order (Sadis)** | `e` | `b` + `e` | **ብ** |
+| **4th Order (Rabi)** | `a` / `aa` | `b` + `a` | **ባ** |
+| **5th Order (Hamis)** | `ee` / `ie` | `b` + `ee` | **ቤ** |
+| **6th Order (Sadis)** | *(Default / Consonant only)* | `b` | **ብ** |
 | **7th Order (Sabi)** | `o` | `b` + `o` | **ቦ** |
+| **8th Order (Labialized)** | `wa` | `b` + `wa` | **ቧ** |
 
 ---
 
@@ -150,31 +151,52 @@ Type a consonant key followed by a vowel to change the **Fidel order**:
 
 | Key | Primary | Alternative Suggestions |
 | :--- | :--- | :--- |
-| `b` | **በ** | — |
-| `c` | **ሰ** | **ጨ**, **ቸ**, **ከ** |
-| `d` | **ደ** | — |
-| `f` | **ፈ** | — |
-| `g` | **ገ** | **ጀ** |
-| `h` | **ሀ** | **ሐ**, **ኅ**, **ኸ** |
-| `j` | **ጀ** | — |
-| `k` | **ከ** | **ቀ** |
-| `l` | **ለ** | — |
-| `m` | **መ** | — |
-| `n` | **ነ** | **ኘ** |
-| `p` | **ፐ** | **ጰ** |
-| `q` | **ቀ** | — |
-| `r` | **ረ** | — |
-| `s` | **ሸ** | **ሰ**, **ሠ** |
-| `t` | **ተ** | **ጠ**, **ፀ**, **ጸ** |
-| `v` | **ቨ** | — |
-| `w` | **ወ** | — |
-| `x` | **አ** | **ዐ**, **ዠ** |
-| `y` | **የ** | — |
-| `z` | **ዘ** | **ዠ** |
+| `b` | **ብ** | **በ** |
+| `c` / `ch` | **ች** | **ጭ**, **ቸ**, **ጨ** |
+| `d` | **ድ** | **ደ** |
+| `f` | **ፍ** | **ፈ** |
+| `g` | **ግ** | **ገ** |
+| `h` | **ህ** | **ሀ**, **ሐ**, **ኅ**, **ኸ** |
+| `j` | **ጅ** | **ጀ** |
+| `k` | **ክ** | **ከ**, **ቀ**, **ኸ** |
+| `l` | **ል** | **ለ** |
+| `m` | **ም** | **መ** |
+| `n` | **ን** | **ነ**, **ኘ** |
+| `p` | **ፕ** | **ፐ**, **ጰ** |
+| `q` | **ቅ** | **ቀ** |
+| `r` | **ር** | **ረ** |
+| `s` | **ስ** | **ሰ**, **ሠ**, **ሸ** |
+| `sh` | **ሽ** | **ሸ**, **ሰ** |
+| `t` | **ት** | **ተ**, **ጠ** |
+| `v` | **ቭ** | **ቨ** |
+| `w` | **ው** | **ወ** |
+| `x` | **እ** | **አ**, **ዐ** |
+| `y` | **ይ** | **የ** |
+| `z` | **ዝ** | **ዘ**, **ዠ** |
 
 ---
 
-### 3. Punctuation Mappings
+### 3. Typing Rules
+
+* **Digraphs**: Standard multi-character letter combinations are recognized automatically:
+  - `sh` → **ሽ** (or `she` → **ሸ**)
+  - `ch` → **ች** (or `che` → **ቸ**)
+  - `zh` → **ዥ** (or `zhe` → **ዠ**)
+  - `ny` / `gn` → **ኝ** (or `nye` / `gne` → **ኘ**)
+  - `ts` → **ጽ** (or `tse` → **ጸ**)
+  - `kh` → **ኽ** (or `khe` → **ኸ**)
+  - `ph` → **ጵ** (or `pha` → **ጳ**)
+  - `hh` → **ሕ** (or `hhe` → **ሐ**)
+* **Standalone Vowels**: Vowels typed without a preceding consonant produce the corresponding glottal-stop Fidel characters (e.g. `a` → **አ**, `e` → **እ**, `i` → **ኢ**, `o` → **ኦ**, `u` → **ኡ**), with alternatives (such as **ዐ**, **ዒ**, **ዖ**) in suggestions. Standalone `e` yields 6th-order **እ** to match natural transliteration (e.g. *emebet* → **እመቤት**), whereas consonant + `e` modifies to 1st order (e.g. `be` → **በ**); 1st-order **አ** is also available in suggestions for `e`.
+* **Labialization (`wa`)**: Typing a consonant followed by `wa` yields the 8th-order labialized Fidel character (e.g. `kwa` → **ኳ**, `qwa` → **ቋ**, `gwa` → **ጓ**, `twa` → **ቷ**, `bwa` → **ቧ**). Consonants without a labialized glyph fall back deterministically (e.g. `wwa` → **ውዋ**, `ywa` → **ይዋ**).
+* **Escape Hatch (`'` or `_`)**: Separate letters to prevent automatic digraph or gemination merging (e.g. `s'h` → **ስህ**, `s'he` → **ስሀ**, `s'se` → **ስሰ**).
+* **Initial Capitalization**: Word-initial capitals (`Ch`, `Sh`, `T`, `S`, `H`, `C`, `P`) map to the base consonant (primary in 6th order: **ች**, **ሽ**, **ት**, **ስ**, **ህ**, **ች**, **ፕ**) rather than emphatics to protect capitalized names and sentence starts (e.g. `Selam` → **ሰላም**, `Tadesse` → **ታደሰ**, `Te` / `TE` → **ተ**, `Ca` → **ቻ**), with emphatic forms available in suggestions. Mid-word capitals retain SERA emphatics (e.g. `aTe` → **አጠ**).
+* **All-Caps (Caps Lock)**: Typing words in all-caps (e.g. `TESFAYE`, `SELAM`, `TE`, `GEMED`) treats the input as Caps Lock and lowercases it before transliterating, avoiding unintended emphatic substitutions.
+* **Gemination**: Repeated identical English consonants before a vowel are automatically merged into a single consonant (e.g. `Tadesse` → **ታደሰ**, `Addis` → **አዲስ**). Consecutive consonants without a vowel produce separate 6th-order syllables (e.g. `ss` → **ስስ**).
+
+---
+
+### 4. Punctuation Mappings
 
 | Key | Amharic Punctuation | Name |
 | :---: | :---: | :--- |
@@ -185,7 +207,7 @@ Type a consonant key followed by a vowel to change the **Fidel order**:
 
 ---
 
-### 4. Homophones & Phonetic Variants
+### 5. Homophones & Phonetic Variants
 
 Some letters in Amharic share identical or similar pronunciations. When typing these characters, `KewtiInput` automatically presents alternative homophones in the suggestion menu:
 
